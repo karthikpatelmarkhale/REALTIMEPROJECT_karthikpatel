@@ -1,16 +1,24 @@
-
 ---
 - name: Deploy application into EKS cluster
   hosts: appserver
   gather_facts: no
-  become: yes
+  remote_user: ec2-user
 
   tasks:
 
     - name: Copy Kubernetes deployment file to app server
       copy:
         src: "{{ playbook_dir }}/k8s_deployment.yaml"
-        dest: /opt/k8s_deployment.yaml
+        dest: /home/ec2-user/k8s_deployment.yaml
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
 
-    - name: Apply Kubernetes deployment
-      command: kubectl apply -f /opt/k8s_deployment.yaml
+    - name: Deploy application to EKS
+      shell: |
+        kubectl apply -f /home/ec2-user/k8s_deployment.yaml
+      register: deployment_output
+
+    - name: Display deployment output
+      debug:
+        var: deployment_output.stdout
